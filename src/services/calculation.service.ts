@@ -37,9 +37,9 @@ class CalculationService {
     }
 
     async save(seats: number, partiesListsWithSeats: PartyListWithSeats[]) {
-        const connection = mySqlDB.getConnection();
-
         try {
+            const connection = mySqlDB.getConnection();
+
             const [result] = await connection.execute<ResultSetHeader>(
                 'INSERT INTO `calculations` (`seats`, `list_quantity`) VALUES (?, ?)',
                 [seats, partiesListsWithSeats.length],
@@ -62,47 +62,52 @@ class CalculationService {
     }
 
     async fetchAll() {
-        const connection = mySqlDB.getConnection();
+        try {
+            const connection = mySqlDB.getConnection();
 
-        const [rows] = await connection.query<CalculationRowRecord[]>(
-            `SELECT 
-                calc.id AS calculation_id,
-                calc.seats,
-                calc.list_quantity,
-                calc.created_at,
-                list.name AS list_name,
-                list.votes AS list_votes,
-                list.seats AS list_seats
-             FROM 
-                calculations calc
-             LEFT JOIN 
-                calculation_lists list ON calc.id = list.calculation_id
-             ORDER BY 
-                calc.created_at DESC`,
-        );
+            const [rows] = await connection.query<CalculationRowRecord[]>(
+                `SELECT 
+                    calc.id AS calculation_id,
+                    calc.seats,
+                    calc.list_quantity,
+                    calc.created_at,
+                    list.name AS list_name,
+                    list.votes AS list_votes,
+                    list.seats AS list_seats
+                 FROM 
+                    calculations calc
+                 LEFT JOIN 
+                    calculation_lists list ON calc.id = list.calculation_id
+                 ORDER BY 
+                    calc.created_at DESC`,
+            );
 
-        const history = rows.reduce((acc, row) => {
-            const existingCalculation = acc.find((c) => c.id === row.calculation_id);
+            const history = rows.reduce((acc, row) => {
+                const existingCalculation = acc.find((c) => c.id === row.calculation_id);
 
-            if (existingCalculation) {
-                existingCalculation.partiesLists.push({
-                    name: row.list_name,
-                    votes: row.list_votes,
-                    seats: row.list_seats,
-                });
-            } else {
-                acc.push({
-                    id: row.calculation_id,
-                    seats: row.seats,
-                    listQuantity: row.list_quantity,
-                    createdAt: row.created_at,
-                    partiesLists: [{ name: row.list_name, votes: row.list_votes, seats: row.list_seats }],
-                });
-            }
-            return acc;
-        }, [] as HistoryRecord[]);
+                if (existingCalculation) {
+                    existingCalculation.partiesLists.push({
+                        name: row.list_name,
+                        votes: row.list_votes,
+                        seats: row.list_seats,
+                    });
+                } else {
+                    acc.push({
+                        id: row.calculation_id,
+                        seats: row.seats,
+                        listQuantity: row.list_quantity,
+                        createdAt: row.created_at,
+                        partiesLists: [{ name: row.list_name, votes: row.list_votes, seats: row.list_seats }],
+                    });
+                }
+                return acc;
+            }, [] as HistoryRecord[]);
 
-        return history;
+            return history;
+        } catch (error) {
+            logger.error('Error while trying to get calculation history', error);
+            throw new Error(`Error en la transacción para obtener el historial de cálculos: ${error}`);
+        }
     }
 }
 
