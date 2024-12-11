@@ -1,9 +1,13 @@
-import { Router } from 'express';
+import { type Response, Router } from 'express';
 
-import dhondtRoutes from '@vote-seat-api/routes/api/dhondt/dhondt.routes';
+import { calculateSeats, getHistory } from '@vote-seat-api/controllers/calculation.controller';
+import type { CalculateRequest } from '@vote-seat-api/types/calculation.types';
 
 const apiRouter = Router();
 
-apiRouter.use('/dhondt', dhondtRoutes);
+apiRouter.post('/calculate', (req: CalculateRequest, res: Response) => {
+    calculateSeats(req, res);
+});
+apiRouter.get('/history', getHistory);
 
 export default apiRouter;

@@ -3,20 +3,20 @@ import type { ResultSetHeader } from 'mysql2';
 import mySqlDB from '@vote-seat-api/db/mysql';
 import logger from '@vote-seat-api/helpers/logger';
 import type {
-    CalculationWithListRow,
-    DhondtHistory,
-    List,
-    ListWithCalculatedSeats,
-} from '@vote-seat-api/types/dhondt.types';
+    CalculationRowRecord,
+    HistoryRecord,
+    PartyList,
+    PartyListWithSeats,
+} from '@vote-seat-api/types/calculation.types';
 
-class DhondtService {
-    calculate(seats: number, lists: List[]): ListWithCalculatedSeats[] {
-        const results = lists.map((list) => ({ name: list.name, votes: list.votes, seats: 0 }));
+class CalculationService {
+    calculate(seats: number, partiesLists: PartyList[]): PartyListWithSeats[] {
+        const results = partiesLists.map((partyList) => ({ name: partyList.name, votes: partyList.votes, seats: 0 }));
         // Creo una lista de prioridad en base al cociente de cada lista.
-        const priorityQueue = lists.map((list) => ({
-            name: list.name,
-            votes: list.votes,
-            quotient: list.votes,
+        const priorityQueue = partiesLists.map((partyList) => ({
+            name: partyList.name,
+            votes: partyList.votes,
+            quotient: partyList.votes,
         }));
 
         for (let i = 0; i < seats; i++) {
@@ -36,21 +36,21 @@ class DhondtService {
         return results;
     }
 
-    async save(seats: number, listsWithCalculatedSeats: ListWithCalculatedSeats[]) {
+    async save(seats: number, partiesListsWithSeats: PartyListWithSeats[]) {
         const connection = mySqlDB.getConnection();
 
         try {
             const [result] = await connection.execute<ResultSetHeader>(
                 'INSERT INTO `calculations` (`seats`, `list_quantity`) VALUES (?, ?)',
-                [seats, listsWithCalculatedSeats.length],
+                [seats, partiesListsWithSeats.length],
             );
             const calculationId = result.insertId;
 
             await Promise.all(
-                listsWithCalculatedSeats.map((list) =>
+                partiesListsWithSeats.map((partyList) =>
                     connection.query(
                         'INSERT INTO `calculation_lists` (`calculation_id`, `name`, `votes`, `seats`) VALUES (?, ?, ?, ?)',
-                        [calculationId, list.name, list.votes, list.seats],
+                        [calculationId, partyList.name, partyList.votes, partyList.seats],
                     ),
                 ),
             );
@@ -64,7 +64,7 @@ class DhondtService {
     async fetchAll() {
         const connection = mySqlDB.getConnection();
 
-        const [rows] = await connection.query<CalculationWithListRow[]>(
+        const [rows] = await connection.query<CalculationRowRecord[]>(
             `SELECT 
                 calc.id AS calculation_id,
                 calc.seats,
@@ -85,7 +85,7 @@ class DhondtService {
             const existingCalculation = acc.find((c) => c.id === row.calculation_id);
 
             if (existingCalculation) {
-                existingCalculation.lists.push({
+                existingCalculation.partiesLists.push({
                     name: row.list_name,
                     votes: row.list_votes,
                     seats: row.list_seats,
@@ -94,17 +94,17 @@ class DhondtService {
                 acc.push({
                     id: row.calculation_id,
                     seats: row.seats,
-                    list_quantity: row.list_quantity,
-                    created_at: row.created_at,
-                    lists: [{ name: row.list_name, votes: row.list_votes, seats: row.list_seats }],
+                    listQuantity: row.list_quantity,
+                    createdAt: row.created_at,
+                    partiesLists: [{ name: row.list_name, votes: row.list_votes, seats: row.list_seats }],
                 });
             }
             return acc;
-        }, [] as DhondtHistory[]);
+        }, [] as HistoryRecord[]);
 
         return history;
     }
 }
 
-const dhondtService = new DhondtService();
-export default dhondtService;
+const calculationService = new CalculationService();
+export default calculationService;

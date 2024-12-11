@@ -1,21 +1,21 @@
 import type { Request, Response } from 'express';
 
-import dhondtService from '@vote-seat-api/services/dhondt.service';
+import calculationService from '@vote-seat-api/services/calculation.service';
 import logger from '@vote-seat-api/helpers/logger';
-import type { CalculateRequest } from '@vote-seat-api/types/dhondt.types';
+import type { CalculateRequest } from '@vote-seat-api/types/calculation.types';
 
 export const calculateSeats = async (req: CalculateRequest, res: Response) => {
     try {
-        const { lists, seats, save } = req.body;
+        const { partiesLists, seats, save } = req.body;
 
-        if (!seats || !lists || !Array.isArray(lists)) {
+        if (!seats || !partiesLists || !Array.isArray(partiesLists)) {
             return res.status(400).json({ error: 'Faltan datos necesarios para realizar el cálculo' });
         }
 
-        const result = dhondtService.calculate(seats, lists);
+        const result = calculationService.calculate(seats, partiesLists);
 
         if (save) {
-            const id = await dhondtService.save(seats, result);
+            const id = await calculationService.save(seats, result);
             res.status(201).json({ id, result, seats });
             return;
         }
@@ -28,10 +28,10 @@ export const calculateSeats = async (req: CalculateRequest, res: Response) => {
 
 export const getHistory = async (_: Request, res: Response) => {
     try {
-        const history = await dhondtService.fetchAll();
+        const history = await calculationService.fetchAll();
         res.status(200).json(history);
     } catch (error) {
-        logger.error('Error while trying to get dhondt calculation history', error);
+        logger.error('Error while trying to get calculation history', error);
         res.status(500).json({ error: 'Error al intentar obtener el historial' });
     }
 };
