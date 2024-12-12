@@ -8,7 +8,7 @@ RUN npm install
 
 RUN npm run build
 
-FROM node:20 AS runner
+FROM node:22 AS runner
 
 WORKDIR /app
 
