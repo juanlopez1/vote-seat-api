@@ -1,13 +1,15 @@
-import { type Response, Router } from 'express';
+import { type Request, type Response, Router } from 'express';
 
 import { calculateSeats, getHistory } from '@vote-seat-api/controllers/calculation.controller';
-import type { CalculateRequest } from '@vote-seat-api/types/calculation.types';
+import type { ApiRequest, CalculateRequest } from '@vote-seat-api/types/request.types';
 
 const apiRouter = Router();
 
-apiRouter.post('/calculate', (req: CalculateRequest, res: Response) => {
-    calculateSeats(req, res);
+apiRouter.post('/calculate', (req: Request, res: Response) => {
+    calculateSeats(req as CalculateRequest, res);
 });
-apiRouter.get('/history', getHistory);
+apiRouter.get('/history', (req: Request, res: Response) => {
+    getHistory(req as ApiRequest, res);
+});
 
 export default apiRouter;
