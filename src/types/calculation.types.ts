@@ -1,4 +1,3 @@
-import type { Request } from 'express';
 import type { RowDataPacket } from 'mysql2';
 
 export type PartyList = {
@@ -17,16 +16,6 @@ export type HistoryRecord = {
     createdAt: string;
     partiesLists: PartyListWithSeats[];
 };
-
-export type CalculateRequest = Request<
-    Record<string, never>,
-    Record<string, never>,
-    {
-        seats: number;
-        partiesLists: PartyList[];
-        save: boolean;
-    }
->;
 
 export type CalculationRowRecord = RowDataPacket & {
     calculation_id: number;
