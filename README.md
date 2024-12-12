@@ -41,19 +41,3 @@ npm run lint
 ```
 
 Ejecuta el linter de TypeScript para verificar errores de tipo y formatea el código utilizando Biome
-
-### `test`
-
-```bash
-npm run test
-```
-
-Ejecuta los `tests` utilizando Jest y recopila la cobertura de las pruebas.
-
-### `test:watch`
-
-```bash
-npm run test:watch
-```
-
-Ejecuta los `tests` en modo "watch".
