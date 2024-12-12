@@ -1,8 +1,8 @@
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 
 import calculationService from '@vote-seat-api/services/calculation.service';
 import logger from '@vote-seat-api/helpers/logger';
-import type { CalculateRequest } from '@vote-seat-api/types/calculation.types';
+import type { ApiRequest, CalculateRequest } from '@vote-seat-api/types/request.types';
 
 export const calculateSeats = async (req: CalculateRequest, res: Response) => {
     try {
@@ -26,7 +26,7 @@ export const calculateSeats = async (req: CalculateRequest, res: Response) => {
     }
 };
 
-export const getHistory = async (_: Request, res: Response) => {
+export const getHistory = async (_: ApiRequest, res: Response) => {
     try {
         const history = await calculationService.fetchAll();
         res.status(200).json(history);
